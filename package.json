@@ -1,0 +1,36 @@
+{
+  "name": "mercury",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev:all",
+    "dev:all": "concurrently -k -n API,WEB -c cyan,yellow \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:web": "vite --config web/vite.config.ts --host --port 5173",
+    "build": "npm run build:web",
+    "build:web": "vite build --config web/vite.config.ts",
+    "preview:web": "vite preview --config web/vite.config.ts --host --port 4173",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web/tsconfig.json",
+    "demo:seed": "tsx scripts/demoSeed.ts",
+    "demo:reset": "tsx scripts/demoReset.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1"
+  }
+}
