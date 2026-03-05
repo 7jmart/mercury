@@ -9,13 +9,13 @@
 - `npm run demo:reset` clears local persisted state in `data/dev`.
 - `npm run dev` starts API + web together.
 - `npm run dev:api` starts only the API server on port `4000`.
-- `npm run dev:web` starts only the Vite app on port `5173`.
+- `npm run dev:web` starts only the Vite app on port `5183`.
 - `npm run typecheck` runs TypeScript checks for API and web.
 
 ### Environment Variables
 
 - `API_PORT` (default `4000`) controls the API server port.
-- `WEB_PORT` (default `5173`) is used by API startup logs to display expected web URL.
+- `WEB_PORT` (default `5183`) is used by API startup logs to display expected web URL.
 
 ### Folder Structure
 
@@ -43,7 +43,7 @@
 
 1. Run `npm run demo:seed`.
 2. Run `npm run dev`.
-3. Open `http://localhost:5173` in tab 1 and login as one demo user.
+3. Open `http://localhost:5183` in tab 1 and login as one demo user.
 4. Open one or more additional tabs and login as different users.
 5. Join the same Orbit from each tab to test realtime participant and message updates.
 

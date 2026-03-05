@@ -27,7 +27,7 @@ import {
 const app = express();
 
 const API_PORT = Number(process.env.API_PORT ?? 4000);
-const WEB_PORT = Number(process.env.WEB_PORT ?? 5173);
+const WEB_PORT = Number(process.env.WEB_PORT ?? 5183);
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "1mb" }));

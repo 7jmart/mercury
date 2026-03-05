@@ -7,7 +7,7 @@ Mercury is a live presence network where people open personal rooms called **Orb
 1. Install dependencies: `npm install`
 2. Seed demo state: `npm run demo:seed`
 3. Start API + web together: `npm run dev`
-4. Open `http://localhost:5173`, choose a demo user in the login selector, and open an Orbit.
+4. Open `http://localhost:5183`, choose a demo user in the login selector, and open an Orbit.
 5. Open more browser tabs with different users to test join, chat, and presence toggles in real time.
 
 ### Helpful Commands

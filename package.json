@@ -7,7 +7,7 @@
     "dev": "npm run dev:all",
     "dev:all": "concurrently -k -n API,WEB -c cyan,yellow \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "tsx watch server/index.ts",
-    "dev:web": "vite --config web/vite.config.ts --host --port 5173",
+    "dev:web": "vite --config web/vite.config.ts --host --port 5183",
     "build": "npm run build:web",
     "build:web": "vite build --config web/vite.config.ts",
     "preview:web": "vite preview --config web/vite.config.ts --host --port 4173",
