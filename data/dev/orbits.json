@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "orbitId": "orbit_ada",
+    "hostUserId": "ada",
+    "hostDisplayName": "Ada",
+    "isLive": true,
+    "openedAt": "2026-03-05T19:22:36.822Z",
+    "closedAt": null
+  },
+  {
+    "orbitId": "orbit_sam",
+    "hostUserId": "sam",
+    "hostDisplayName": "Sam",
+    "isLive": true,
+    "openedAt": "2026-03-05T19:26:36.822Z",
+    "closedAt": null
+  },
+  {
+    "orbitId": "orbit_rio",
+    "hostUserId": "rio",
+    "hostDisplayName": "Rio",
+    "isLive": true,
+    "openedAt": "2026-03-05T19:29:36.822Z",
+    "closedAt": null
+  },
+  {
+    "orbitId": "orbit_guest",
+    "hostUserId": "guest",
+    "hostDisplayName": "Guest",
+    "isLive": true,
+    "openedAt": "2026-03-05T19:56:46.778Z",
+    "closedAt": null
+  }
+]

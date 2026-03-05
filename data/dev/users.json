@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "userId": "ada",
+    "displayName": "Ada",
+    "createdAt": "2026-03-05T16:36:36.822Z"
+  },
+  {
+    "userId": "sam",
+    "displayName": "Sam",
+    "createdAt": "2026-03-05T16:38:36.822Z"
+  },
+  {
+    "userId": "rio",
+    "displayName": "Rio",
+    "createdAt": "2026-03-05T16:40:36.822Z"
+  },
+  {
+    "userId": "noa",
+    "displayName": "Noa",
+    "createdAt": "2026-03-05T16:42:36.822Z"
+  },
+  {
+    "userId": "ivy",
+    "displayName": "Ivy",
+    "createdAt": "2026-03-05T16:44:36.822Z"
+  },
+  {
+    "userId": "guest",
+    "displayName": "Guest",
+    "createdAt": "2026-03-05T19:56:15.177Z"
+  }
+]
