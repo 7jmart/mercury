@@ -3,6 +3,8 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import type {
   AuthenticatedUser,
   DevLoginResponse,
+  GrowthEventInput,
+  GrowthEventName,
   MessageRecord,
   OrbitDetail,
   OrbitEventType,
@@ -31,6 +33,8 @@ const ORBIT_EVENT_TYPES: OrbitEventType[] = [
   "presence_updated",
   "message_created",
 ];
+
+const INVITE_QUERY_PARAM = "orbit";
 
 interface Session {
   token: string;
@@ -79,6 +83,25 @@ function findMyPresence(orbitDetail: OrbitDetail | null, currentUserId: string):
   return orbitDetail.participants.find((participant) => participant.userId === currentUserId) ?? null;
 }
 
+function readInviteOrbitIdFromUrl(): string | null {
+  const candidate = new URLSearchParams(window.location.search).get(INVITE_QUERY_PARAM)?.trim() ?? "";
+  if (!candidate || !/^[a-z0-9_-]{3,64}$/i.test(candidate)) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function clearInviteOrbitFromUrl(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has(INVITE_QUERY_PARAM)) {
+    return;
+  }
+
+  url.searchParams.delete(INVITE_QUERY_PARAM);
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
 export default function App(): JSX.Element {
   const [session, setSession] = useState<Session | null>(() => readSession());
   const [demoUsers, setDemoUsers] = useState<AuthenticatedUser[]>(FALLBACK_DEMO_USERS);
@@ -90,6 +113,7 @@ export default function App(): JSX.Element {
   const [busy, setBusy] = useState(false);
   const [customUserId, setCustomUserId] = useState("guest");
   const [customDisplayName, setCustomDisplayName] = useState("Guest");
+  const [pendingInviteOrbitId, setPendingInviteOrbitId] = useState<string | null>(() => readInviteOrbitIdFromUrl());
 
   const statusTimer = useRef<number | null>(null);
 
@@ -133,6 +157,23 @@ export default function App(): JSX.Element {
       return detail;
     },
     [setOrbitDetail],
+  );
+
+  const trackGrowthEvent = useCallback(
+    async (eventName: GrowthEventName, orbitId: string) => {
+      if (!session) {
+        return;
+      }
+
+      const payload: GrowthEventInput = { eventName, orbitId };
+
+      try {
+        await apiPost<{ ok: boolean }>("/api/growth/events", payload, session.token);
+      } catch {
+        // Growth telemetry should never block core user actions.
+      }
+    },
+    [session],
   );
 
   const loginAs = useCallback(
@@ -193,7 +234,7 @@ export default function App(): JSX.Element {
   }, [loadLiveOrbits, pushStatus, session]);
 
   const joinOrbitById = useCallback(
-    async (orbitId: string) => {
+    async (orbitId: string, options?: { source: "invite" }) => {
       if (!session) {
         return;
       }
@@ -203,17 +244,48 @@ export default function App(): JSX.Element {
         const detail = await apiPost<OrbitDetail>(`/api/orbits/${orbitId}/join`, {}, session.token);
         setCurrentOrbitId(orbitId);
         setOrbitDetail(detail);
-        pushStatus(`Joined ${detail.host.displayName}'s Orbit.`);
+
+        if (options?.source === "invite") {
+          setPendingInviteOrbitId(null);
+          clearInviteOrbitFromUrl();
+          void trackGrowthEvent("invite_accepted", orbitId);
+          pushStatus(`Invite accepted. You joined ${detail.host.displayName}'s Orbit.`);
+        } else {
+          pushStatus(`Joined ${detail.host.displayName}'s Orbit.`);
+        }
       } catch (error) {
         if (error instanceof ApiError) {
           pushStatus(error.message);
+        }
+
+        if (options?.source === "invite") {
+          setPendingInviteOrbitId(null);
+          clearInviteOrbitFromUrl();
         }
       } finally {
         setBusy(false);
       }
     },
-    [pushStatus, session],
+    [pushStatus, session, trackGrowthEvent],
   );
+
+  const shareCurrentOrbit = useCallback(async () => {
+    if (!session || !currentOrbitId) {
+      return;
+    }
+
+    const inviteUrl = new URL(window.location.href);
+    inviteUrl.searchParams.set(INVITE_QUERY_PARAM, currentOrbitId);
+    const inviteLink = inviteUrl.toString();
+
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      void trackGrowthEvent("share_clicked", currentOrbitId);
+      pushStatus("Invite link copied. Share it to bring people into this Orbit.");
+    } catch {
+      pushStatus(`Copy failed. Share this invite manually: ${inviteLink}`);
+    }
+  }, [currentOrbitId, pushStatus, session, trackGrowthEvent]);
 
   const leaveCurrentOrbit = useCallback(async () => {
     if (!session || !currentOrbitId) {
@@ -311,6 +383,20 @@ export default function App(): JSX.Element {
   }, [loadDemoUsers, loadLiveOrbits]);
 
   useEffect(() => {
+    if (!session || !pendingInviteOrbitId || busy) {
+      return;
+    }
+
+    if (currentOrbitId === pendingInviteOrbitId) {
+      setPendingInviteOrbitId(null);
+      clearInviteOrbitFromUrl();
+      return;
+    }
+
+    void joinOrbitById(pendingInviteOrbitId, { source: "invite" });
+  }, [busy, currentOrbitId, joinOrbitById, pendingInviteOrbitId, session]);
+
+  useEffect(() => {
     if (!currentOrbitId) {
       return;
     }
@@ -402,6 +488,9 @@ export default function App(): JSX.Element {
         <section className="panel login-panel">
           <h2>Dev Login Selector</h2>
           <p>Open multiple tabs and choose different users to test join/chat/presence quickly.</p>
+          {pendingInviteOrbitId ? (
+            <p className="invite-hint">This invite will auto-join Orbit <strong>{pendingInviteOrbitId}</strong> after login.</p>
+          ) : null}
 
           <div className="login-grid">
             {demoUsers.map((user) => (
@@ -452,7 +541,7 @@ export default function App(): JSX.Element {
                         <span className="live-dot">Live</span>
                       </div>
                       <p>
-                        {orbit.participantCount} participants · {orbit.messageCount} messages
+                        {orbit.participantCount} participants - {orbit.messageCount} messages
                       </p>
                       <p className="muted">Opened at {formatClock(orbit.openedAt)}</p>
                       <button className="button button-secondary" onClick={() => void joinOrbitById(orbit.orbitId)} disabled={busy}>
@@ -478,9 +567,14 @@ export default function App(): JSX.Element {
                     <h2>{orbitDetail.host.displayName}'s Orbit</h2>
                     <p>{orbitDetail.orbit.isLive ? "Live now" : "Offline"}</p>
                   </div>
-                  <button className="button button-ghost" onClick={leaveCurrentOrbit} disabled={busy}>
-                    Leave Orbit
-                  </button>
+                  <div className="orbit-header-actions">
+                    <button className="button button-secondary" onClick={shareCurrentOrbit} disabled={busy}>
+                      Copy Invite Link
+                    </button>
+                    <button className="button button-ghost" onClick={leaveCurrentOrbit} disabled={busy}>
+                      Leave Orbit
+                    </button>
+                  </div>
                 </div>
 
                 {myPresence ? (

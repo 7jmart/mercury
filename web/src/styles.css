@@ -110,6 +110,16 @@ h1 {
   margin: 0;
 }
 
+.invite-hint {
+  margin: 0.6rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(39, 107, 136, 0.25);
+  background: rgba(39, 107, 136, 0.08);
+  color: #1b4f65;
+  font-weight: 600;
+}
+
 .login-grid {
   display: flex;
   flex-wrap: wrap;
@@ -158,6 +168,13 @@ input {
 .panel-header p {
   margin: 0.2rem 0 0;
   color: rgba(17, 34, 48, 0.7);
+}
+
+.orbit-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .live-panel {

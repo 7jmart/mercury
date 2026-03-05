@@ -4,6 +4,9 @@ import express, { type Request, type Response } from "express";
 import type {
   AuthenticatedUser,
   DevLoginResponse,
+  GrowthEventInput,
+  GrowthEventName,
+  GrowthSummaryResponse,
   OrbitEvent,
   OrbitEventType,
   PresenceUpdateInput,
@@ -28,6 +31,43 @@ const app = express();
 
 const API_PORT = Number(process.env.API_PORT ?? 4000);
 const WEB_PORT = Number(process.env.WEB_PORT ?? 5183);
+
+const GROWTH_EVENT_NAMES: GrowthEventName[] = ["share_clicked", "invite_accepted"];
+
+interface GrowthEventRecord {
+  eventName: GrowthEventName;
+  orbitId: string;
+  userId: string;
+  emittedAt: string;
+}
+
+const growthEvents: GrowthEventRecord[] = [];
+
+function isGrowthEventName(value: unknown): value is GrowthEventName {
+  return typeof value === "string" && GROWTH_EVENT_NAMES.includes(value as GrowthEventName);
+}
+
+function recordGrowthEvent(event: GrowthEventInput, user: AuthenticatedUser): void {
+  growthEvents.push({
+    eventName: event.eventName,
+    orbitId: event.orbitId,
+    userId: user.userId,
+    emittedAt: new Date().toISOString(),
+  });
+}
+
+function buildGrowthSummary(): GrowthSummaryResponse {
+  return {
+    metrics: GROWTH_EVENT_NAMES.map((eventName) => {
+      const matching = growthEvents.filter((item) => item.eventName === eventName);
+      return {
+        eventName,
+        count: matching.length,
+        uniqueUsers: new Set(matching.map((item) => item.userId)).size,
+      };
+    }),
+  };
+}
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
@@ -84,6 +124,33 @@ app.get("/api/health", (_req, res) => {
     service: "mercury-orbit-api",
     now: new Date().toISOString(),
   });
+});
+
+app.post("/api/growth/events", (req, res) => {
+  const user = authUserFromRequest(req, res);
+  if (!user) {
+    return;
+  }
+
+  const eventName = req.body?.eventName;
+  const orbitId = typeof req.body?.orbitId === "string" ? req.body.orbitId.trim() : "";
+
+  if (!isGrowthEventName(eventName)) {
+    res.status(400).json({ error: "eventName must be one of: share_clicked, invite_accepted." });
+    return;
+  }
+
+  if (!orbitId) {
+    res.status(400).json({ error: "orbitId is required." });
+    return;
+  }
+
+  recordGrowthEvent({ eventName, orbitId }, user);
+  res.status(202).json({ ok: true });
+});
+
+app.get("/api/growth/summary", (_req, res) => {
+  res.json(buildGrowthSummary());
 });
 
 app.get("/api/dev/users", async (_req, res) => {

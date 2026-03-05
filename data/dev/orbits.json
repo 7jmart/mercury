@@ -27,8 +27,8 @@
     "orbitId": "orbit_guest",
     "hostUserId": "guest",
     "hostDisplayName": "Guest",
-    "isLive": true,
+    "isLive": false,
     "openedAt": "2026-03-05T19:56:46.778Z",
-    "closedAt": null
+    "closedAt": "2026-03-05T20:09:40.632Z"
   }
 ]

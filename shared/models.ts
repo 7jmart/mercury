@@ -74,3 +74,20 @@ export interface OrbitEvent<TPayload = Record<string, unknown>> {
   emittedAt: string;
   payload: TPayload;
 }
+
+export type GrowthEventName = "share_clicked" | "invite_accepted";
+
+export interface GrowthEventInput {
+  eventName: GrowthEventName;
+  orbitId: string;
+}
+
+export interface GrowthMetricSnapshot {
+  eventName: GrowthEventName;
+  count: number;
+  uniqueUsers: number;
+}
+
+export interface GrowthSummaryResponse {
+  metrics: GrowthMetricSnapshot[];
+}
