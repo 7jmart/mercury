@@ -93,7 +93,7 @@ async function ensureDataFiles(): Promise<void> {
       try {
         await fs.access(filePath);
       } catch {
-        const initialValue = Array.isArray(({} as DevState)[collection as PersistedCollection]) ? [] : [];
+        const initialValue: unknown[] = [];
         await atomicWriteJson(filePath, initialValue);
       }
     }),
