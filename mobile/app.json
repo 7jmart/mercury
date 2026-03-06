@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Mercury",
+    "slug": "mercury-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "mercury",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-notifications"]
+  }
+}

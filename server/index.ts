@@ -1,5 +1,8 @@
+import { createServer } from "node:http";
+
 import cors from "cors";
 import express, { type Request, type Response } from "express";
+import { Server as SocketIOServer } from "socket.io";
 
 import type {
   AuthenticatedUser,
@@ -12,6 +15,9 @@ import type {
   PresenceUpdateInput,
 } from "../shared/models.js";
 import { createDevToken, readAuthUserFromHeader } from "./auth.js";
+import { V1RealtimeHub } from "./v1Realtime.js";
+import { registerV1Routes } from "./v1Routes.js";
+import { getV1Store } from "./v1Store.js";
 import { orbitRealtimeHub } from "./realtime.js";
 import {
   OrbitStoreError,
@@ -71,6 +77,23 @@ function buildGrowthSummary(): GrowthSummaryResponse {
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "1mb" }));
+
+const httpServer = createServer(app);
+const socketServer = new SocketIOServer(httpServer, {
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+});
+
+const v1Store = getV1Store();
+await v1Store.initialize();
+
+const v1RealtimeHub = new V1RealtimeHub(socketServer, v1Store);
+registerV1Routes(app, {
+  store: v1Store,
+  realtimeHub: v1RealtimeHub,
+});
 
 function sendStoreError(error: unknown, res: Response): void {
   if (error instanceof OrbitStoreError) {
@@ -384,9 +407,11 @@ app.use((_req, res) => {
 
 await initializeStore();
 
-app.listen(API_PORT, () => {
+httpServer.listen(API_PORT, () => {
   console.log("[Mercury Orbit] API online");
-  console.log(`  UI URL:        http://localhost:${WEB_PORT}`);
-  console.log(`  API URL:       http://localhost:${API_PORT}`);
-  console.log(`  Realtime URL:  http://localhost:${API_PORT}/api/orbits/:orbitId/events`);
+  console.log(`  UI URL:             http://localhost:${WEB_PORT}`);
+  console.log(`  API URL:            http://localhost:${API_PORT}`);
+  console.log(`  SSE URL:            http://localhost:${API_PORT}/api/orbits/:orbitId/events`);
+  console.log(`  Socket.IO URL:      ws://localhost:${API_PORT}/socket.io/`);
+  console.log(`  V1 Health URL:      http://localhost:${API_PORT}/api/v1/health`);
 });

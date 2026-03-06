@@ -4,3 +4,5 @@ npm-debug.log*
 .env
 .dist
 dist
+
+data/dev/v1-state.json
